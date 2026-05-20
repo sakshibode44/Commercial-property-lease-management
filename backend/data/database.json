@@ -1,0 +1,140 @@
+{
+  "users": [
+    {
+      "id": "b4e98dc2-bb67-46b8-b43d-86bf58531b2d",
+      "name": "sakshi",
+      "email": "admin@example.com",
+      "password": "$2b$12$ecZGbwakyM35DMHoas4/huCRUOrkjH0zS2ZvjMjV7xLvDaQFx2U7G",
+      "role": "admin",
+      "createdAt": "2026-05-04T12:57:44.916Z",
+      "updatedAt": "2026-05-04T12:57:44.916Z"
+    }
+  ],
+  "properties": [
+    {
+      "id": "e21d2807-89ae-466a-b2d1-733d8a2c9bd2",
+      "name": "sakshi",
+      "address": "at.dighori",
+      "type": "office",
+      "totalArea": 500,
+      "totalUnits": 798,
+      "amenities": [
+        "Parking",
+        "Gym"
+      ],
+      "status": "available",
+      "images": [],
+      "createdAt": "2026-05-04T13:19:39.448Z",
+      "updatedAt": "2026-05-04T13:19:39.448Z"
+    },
+    {
+      "id": "583f3cd0-08c5-47b1-ab6f-1612811eb9f8",
+      "name": "sakshi",
+      "address": "nagpur",
+      "type": "retail",
+      "totalArea": 300,
+      "totalUnits": 399,
+      "amenities": [
+        "Parking",
+        "Gym"
+      ],
+      "status": "available",
+      "createdBy": "b4e98dc2-bb67-46b8-b43d-86bf58531b2d",
+      "images": [],
+      "createdAt": "2026-05-05T02:04:00.198Z",
+      "updatedAt": "2026-05-05T02:04:00.198Z"
+    }
+  ],
+  "tenants": [
+    {
+      "id": "2397ad56-bd51-4950-8b40-0df6648e0862",
+      "companyName": "Xyz company",
+      "contactPerson": "2345658797",
+      "email": "example@gmail.com",
+      "phone": "xxxxxxxxxx",
+      "address": "nagpur",
+      "industry": "",
+      "status": "active",
+      "createdAt": "2026-05-05T01:32:32.262Z",
+      "updatedAt": "2026-05-05T01:32:32.262Z"
+    },
+    {
+      "id": "08ebc3f2-a25f-4fbc-bafa-53a0ee225e83",
+      "companyName": "ABC pvt ltd",
+      "contactPerson": "Rahul sharma",
+      "email": "abc@gmail.com",
+      "phone": "XXXXXXXXXX",
+      "address": "nagpur",
+      "industry": "IT,retail",
+      "status": "active",
+      "createdAt": "2026-05-05T01:53:40.261Z",
+      "updatedAt": "2026-05-05T01:53:40.261Z"
+    },
+    {
+      "id": "724a7c91-6a60-4a08-9c52-5ae5c3bc8b77",
+      "companyName": "ABC pvt ltd",
+      "contactPerson": "Rahul sharma",
+      "email": "abc@gmail.com",
+      "phone": "XXXXXXXXXX",
+      "address": "nagpur",
+      "industry": "IT,retail",
+      "status": "active",
+      "createdAt": "2026-05-05T01:55:51.524Z",
+      "updatedAt": "2026-05-05T01:55:51.524Z"
+    }
+  ],
+  "leases": [
+    {
+      "id": "a1134e16-f81a-4846-8874-26fb5c47cd3c",
+      "propertyId": "583f3cd0-08c5-47b1-ab6f-1612811eb9f8",
+      "tenantId": "08ebc3f2-a25f-4fbc-bafa-53a0ee225e83",
+      "startDate": "2026-05-05",
+      "endDate": "2026-06-05",
+      "monthlyRent": 400000,
+      "escalationClause": {},
+      "securityDeposit": 50000,
+      "status": "active",
+      "documents": [],
+      "createdAt": "2026-05-05T02:04:33.557Z",
+      "updatedAt": "2026-05-05T02:04:33.557Z"
+    }
+  ],
+  "payments": [
+    {
+      "id": "db85e63d-d348-442f-9031-f35abfb3fccf",
+      "leaseId": "a1134e16-f81a-4846-8874-26fb5c47cd3c",
+      "tenantId": "08ebc3f2-a25f-4fbc-bafa-53a0ee225e83",
+      "amount": 400000,
+      "dueDate": "2026-05-05T00:00:00.000Z",
+      "status": "pending",
+      "receiptNumber": "RCP-1777946673561-7IIMC",
+      "createdAt": "2026-05-05T02:04:33.563Z",
+      "updatedAt": "2026-05-05T02:04:33.563Z"
+    },
+    {
+      "id": "0e9eea20-06bf-4046-812e-358cca09cadf",
+      "leaseId": "a1134e16-f81a-4846-8874-26fb5c47cd3c",
+      "tenantId": "08ebc3f2-a25f-4fbc-bafa-53a0ee225e83",
+      "amount": 400000,
+      "dueDate": "2026-06-05T00:00:00.000Z",
+      "status": "pending",
+      "receiptNumber": "RCP-1777946673561-XUIG6",
+      "createdAt": "2026-05-05T02:04:33.563Z",
+      "updatedAt": "2026-05-05T02:04:33.563Z"
+    }
+  ],
+  "maintenance": [
+    {
+      "id": "10bb8c74-4e65-4da8-b12b-15d6210dbdc5",
+      "propertyId": "e21d2807-89ae-466a-b2d1-733d8a2c9bd2",
+      "tenantId": "",
+      "title": "maintenance",
+      "description": "...",
+      "priority": "high",
+      "status": "in_progress",
+      "requestedDate": "2026-05-05T01:57:00.885Z",
+      "createdAt": "2026-05-05T01:57:00.885Z",
+      "updatedAt": "2026-05-05T01:57:06.417Z"
+    }
+  ]
+}

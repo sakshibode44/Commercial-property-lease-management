@@ -1,0 +1,6 @@
+.utilities { padding: 1rem; }
+.utilities-grid { display: grid; gap: 1rem; }
+.utility-card { background: #fff; padding: 1rem; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.05); }
+.utility-card-header { display: flex; justify-content: space-between; align-items: center; }
+.form-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+.form-row label { flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 0.5rem; }

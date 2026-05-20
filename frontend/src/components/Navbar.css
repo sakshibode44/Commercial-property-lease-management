@@ -1,0 +1,82 @@
+.navbar {
+  width: 250px;
+  height: 100vh;
+  background: #2c3e50;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+}
+
+.navbar-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #34495e;
+}
+
+.navbar-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #ecf0f1;
+}
+
+.user-info {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: #bdc3c7;
+}
+
+.navbar-menu {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+  flex: 1;
+}
+
+.navbar-link {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  color: #bdc3c7;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  gap: 0.75rem;
+}
+
+.navbar-link:hover {
+  background: #34495e;
+  color: #ecf0f1;
+}
+
+.navbar-link.active {
+  background: #3498db;
+  color: white;
+  border-right: 3px solid #2980b9;
+}
+
+.navbar-footer {
+  padding: 1rem;
+  border-top: 1px solid #34495e;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0.75rem;
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  gap: 0.75rem;
+  transition: background 0.3s ease;
+}
+
+.logout-btn:hover {
+  background: #c0392b;
+}
