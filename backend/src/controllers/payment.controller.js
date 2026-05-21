@@ -1,31 +1,71 @@
-const Payment = require("../models/Payment");
-const Lease = require("../models/Lease");
-const Tenant = require("../models/Tenant");
-const Property = require("../models/Property");
+const { getSupabase } = require("../config/supabase");
 const ApiError = require("../utils/ApiError");
 const ApiResponse = require("../utils/ApiResponse");
-const { generateReceiptNumber } = require("../utils/receiptGenerator");
 
 const populatePayment = async (payment) => {
-  const lease = payment.leaseId ? await Lease.findById(payment.leaseId) : null;
-  const tenant = payment.tenantId ? await Tenant.findById(payment.tenantId) : null;
-  const property = lease && lease.propertyId ? await Property.findById(lease.propertyId) : null;
+  const supabase = getSupabase();
+
+  let lease = null;
+  let tenant = null;
+  let property = null;
+
+  if (payment.lease_id) {
+    const { data: l } = await supabase
+      .from("leases")
+      .select("*")
+      .eq("id", payment.lease_id)
+      .single();
+    lease = l;
+
+    if (lease && lease.property_id) {
+      const { data: prop } = await supabase
+        .from("properties")
+        .select("*")
+        .eq("id", lease.property_id)
+        .single();
+      property = prop;
+    }
+  }
+
+  if (payment.tenant_id) {
+    const { data: t } = await supabase
+      .from("tenants")
+      .select("*")
+      .eq("id", payment.tenant_id)
+      .single();
+    tenant = t;
+  }
+
   return {
-    ...payment.toJSON(),
-    leaseDetails: lease ? lease.toJSON() : null,
-    tenantDetails: tenant ? tenant.toJSON() : null,
-    propertyDetails: property ? property.toJSON() : null,
+    ...payment,
+    leaseDetails: lease,
+    tenantDetails: tenant,
+    propertyDetails: property,
   };
 };
 
 const getPayments = async (req, res, next) => {
   try {
-    const filter = {};
-    if (req.query.tenantId) filter.tenantId = req.query.tenantId;
-    if (req.query.leaseId) filter.leaseId = req.query.leaseId;
-    if (req.query.status) filter.status = req.query.status;
+    const supabase = getSupabase();
 
-    const payments = await Payment.find(filter);
+    let query = supabase.from("payments").select("*");
+
+    if (req.query.tenantId) {
+      query = query.eq("tenant_id", req.query.tenantId);
+    }
+    if (req.query.leaseId) {
+      query = query.eq("lease_id", req.query.leaseId);
+    }
+    if (req.query.status) {
+      query = query.eq("status", req.query.status);
+    }
+
+    const { data: payments, error } = await query.order("due_date", { ascending: true });
+
+    if (error) {
+      throw new ApiError(500, error.message);
+    }
+
     const payload = await Promise.all(payments.map(populatePayment));
     res.status(200).json(new ApiResponse(200, payload, "Payments retrieved successfully"));
   } catch (error) {
@@ -35,10 +75,18 @@ const getPayments = async (req, res, next) => {
 
 const getPayment = async (req, res, next) => {
   try {
-    const payment = await Payment.findById(req.params.paymentId);
-    if (!payment) {
+    const supabase = getSupabase();
+
+    const { data: payment, error } = await supabase
+      .from("payments")
+      .select("*")
+      .eq("id", req.params.paymentId)
+      .single();
+
+    if (error || !payment) {
       throw new ApiError(404, "Payment not found");
     }
+
     const payload = await populatePayment(payment);
     res.status(200).json(new ApiResponse(200, payload, "Payment retrieved successfully"));
   } catch (error) {
@@ -48,23 +96,37 @@ const getPayment = async (req, res, next) => {
 
 const recordPayment = async (req, res, next) => {
   try {
-    const payment = await Payment.findById(req.params.paymentId);
-    if (!payment) {
+    const supabase = getSupabase();
+
+    const { data: payment, error: selectError } = await supabase
+      .from("payments")
+      .select("*")
+      .eq("id", req.params.paymentId)
+      .single();
+
+    if (selectError || !payment) {
       throw new ApiError(404, "Payment not found");
     }
 
-    const { amount, method, paidDate } = req.body;
-    payment.status = "paid";
-    payment.amount = amount !== undefined ? amount : payment.amount;
-    payment.method = method || payment.method;
-    payment.paidDate = paidDate || new Date();
+    const { amount, method, paymentDate } = req.body;
 
-    if (!payment.receiptNumber) {
-      payment.receiptNumber = generateReceiptNumber();
+    const { data: updated, error: updateError } = await supabase
+      .from("payments")
+      .update({
+        status: "completed",
+        amount: amount !== undefined ? amount : payment.amount,
+        payment_method: method || payment.payment_method,
+        payment_date: paymentDate || new Date().toISOString().split('T')[0],
+      })
+      .eq("id", req.params.paymentId)
+      .select()
+      .single();
+
+    if (updateError) {
+      throw new ApiError(500, updateError.message);
     }
 
-    await payment.save();
-    const payload = await populatePayment(payment);
+    const payload = await populatePayment(updated);
     res.status(200).json(new ApiResponse(200, payload, "Payment recorded successfully"));
   } catch (error) {
     next(error);
@@ -73,30 +135,35 @@ const recordPayment = async (req, res, next) => {
 
 const generateReceipt = async (req, res, next) => {
   try {
-    const payment = await Payment.findById(req.params.paymentId);
-    if (!payment) {
+    const supabase = getSupabase();
+
+    const { data: payment, error } = await supabase
+      .from("payments")
+      .select("*")
+      .eq("id", req.params.paymentId)
+      .single();
+
+    if (error || !payment) {
       throw new ApiError(404, "Payment not found");
     }
 
-    if (payment.status !== "paid") {
-      throw new ApiError(400, "Receipt can only be generated for paid payments");
+    if (payment.status !== "completed") {
+      throw new ApiError(400, "Receipt can only be generated for completed payments");
     }
 
-    const lease = payment.leaseId ? await Lease.findById(payment.leaseId) : null;
-    const tenant = payment.tenantId ? await Tenant.findById(payment.tenantId) : null;
-    const property = lease && lease.propertyId ? await Property.findById(lease.propertyId) : null;
+    const payload = await populatePayment(payment);
 
     const receipt = {
-      receiptNumber: payment.receiptNumber,
-      paymentId: payment.id,
-      tenant: tenant ? tenant.toJSON() : null,
-      property: property ? property.toJSON() : null,
-      lease: lease ? lease.toJSON() : null,
+      receipt_id: `RCP-${payment.id.substring(0, 8)}-${Date.now()}`,
+      payment_id: payment.id,
+      tenant: payload.tenantDetails,
+      property: payload.propertyDetails,
+      lease: payload.leaseDetails,
       amount: payment.amount,
-      paidDate: payment.paidDate,
-      dueDate: payment.dueDate,
-      method: payment.method,
-      generatedAt: new Date(),
+      payment_date: payment.payment_date,
+      due_date: payment.due_date,
+      payment_method: payment.payment_method,
+      generated_at: new Date().toISOString(),
     };
 
     res.status(200).json(new ApiResponse(200, receipt, "Receipt generated successfully"));
@@ -107,19 +174,31 @@ const generateReceipt = async (req, res, next) => {
 
 const checkOverduePayments = async (req, res, next) => {
   try {
-    const today = new Date();
-    const payments = await Payment.find({ status: "pending" });
-    let updated = 0;
+    const supabase = getSupabase();
+    const today = new Date().toISOString().split('T')[0];
 
-    for (const payment of payments) {
-      if (payment.dueDate && new Date(payment.dueDate) < today) {
-        payment.status = "overdue";
-        await payment.save();
-        updated += 1;
-      }
+    const { data: payments, error: selectError } = await supabase
+      .from("payments")
+      .select("*")
+      .eq("status", "pending")
+      .lt("due_date", today);
+
+    if (selectError) {
+      throw new ApiError(500, selectError.message);
     }
 
-    res.status(200).json(new ApiResponse(200, { updated }, "Overdue payments updated"));
+    // Update overdue payments
+    const { error: updateError } = await supabase
+      .from("payments")
+      .update({ status: "overdue" })
+      .eq("status", "pending")
+      .lt("due_date", today);
+
+    if (updateError) {
+      throw new ApiError(500, updateError.message);
+    }
+
+    res.status(200).json(new ApiResponse(200, { updated: payments.length }, "Overdue payments updated"));
   } catch (error) {
     next(error);
   }

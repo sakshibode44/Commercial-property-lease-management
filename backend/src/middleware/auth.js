@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const env = require("../config/env");
-const User = require("../models/User");
+const { getSupabase } = require("../config/supabase");
 const ApiError = require("../utils/ApiError");
 
 const auth = async (req, res, next) => {
@@ -12,9 +12,15 @@ const auth = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, env.JWT_SECRET);
-    const user = await User.findById(decoded.sub);
+    const supabase = getSupabase();
 
-    if (!user) {
+    const { data: user, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", decoded.sub)
+      .single();
+
+    if (error || !user) {
       throw new ApiError(401, "User not found");
     }
 

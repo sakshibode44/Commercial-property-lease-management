@@ -1,46 +1,53 @@
-const Property = require("../models/Property");
-const Tenant = require("../models/Tenant");
-const Lease = require("../models/Lease");
-const Payment = require("../models/Payment");
-const Maintenance = require("../models/Maintenance");
+const { getSupabase } = require("../config/supabase");
 const ApiResponse = require("../utils/ApiResponse");
 
 const getDashboardStats = async (req, res, next) => {
   try {
+    const supabase = getSupabase();
     const today = new Date();
     const thirtyDaysFromNow = new Date();
     thirtyDaysFromNow.setDate(today.getDate() + 30);
 
-    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-
     // Get all data
-    const [properties, tenants, leases, payments, maintenance] = await Promise.all([
-      Property.find(),
-      Tenant.find(),
-      Lease.find(),
-      Payment.find(),
-      Maintenance.find()
+    const [
+      { data: properties, error: propertiesError },
+      { data: tenants, error: tenantsError },
+      { data: leases, error: leasesError },
+      { data: payments, error: paymentsError },
+      { data: maintenance, error: maintenanceError }
+    ] = await Promise.all([
+      supabase.from("properties").select("*"),
+      supabase.from("tenants").select("*"),
+      supabase.from("leases").select("*"),
+      supabase.from("payments").select("*"),
+      supabase.from("maintenance").select("*")
     ]);
+
+    if (propertiesError || tenantsError || leasesError || paymentsError || maintenanceError) {
+      throw new Error("Failed to fetch dashboard data");
+    }
 
     // Calculate stats
     const totalProperties = properties.length;
     const totalTenants = tenants.length;
-    const activeLeases = leases.filter(lease => lease.status === "active").length;
+    const activeLeases = leases.filter(lease => lease.lease_status === "active").length;
+    
+    const todayStr = today.toISOString().split('T')[0];
+    const thirtyDaysStr = thirtyDaysFromNow.toISOString().split('T')[0];
     const expiringLeases = leases.filter(lease =>
-      lease.status === "active" &&
-      new Date(lease.endDate) >= today &&
-      new Date(lease.endDate) <= thirtyDaysFromNow
+      lease.lease_status === "active" &&
+      lease.end_date >= todayStr &&
+      lease.end_date <= thirtyDaysStr
     ).length;
 
     const totalRevenue = payments
-      .filter(payment => payment.status === "paid")
+      .filter(payment => payment.status === "completed")
       .reduce((sum, payment) => sum + (payment.amount || 0), 0);
 
     const monthRevenue = payments
-      .filter(payment => payment.status === "paid" && payment.paidDate)
+      .filter(payment => payment.status === "completed" && payment.payment_date)
       .filter(payment => {
-        const paidDate = new Date(payment.paidDate);
+        const paidDate = new Date(payment.payment_date);
         return (
           paidDate.getFullYear() === today.getFullYear() &&
           paidDate.getMonth() === today.getMonth()
@@ -57,35 +64,35 @@ const getDashboardStats = async (req, res, next) => {
       : 0;
 
     // Revenue for last 6 months
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(today.getMonth() - 5);
-
     const revenueByMonth = [];
     for (let i = 5; i >= 0; i--) {
       const monthStart = new Date(today.getFullYear(), today.getMonth() - i, 1);
       const monthEnd = new Date(today.getFullYear(), today.getMonth() - i + 1, 0);
 
-      const monthRevenue = payments
+      const monthStartStr = monthStart.toISOString().split('T')[0];
+      const monthEndStr = monthEnd.toISOString().split('T')[0];
+
+      const monthRevenueAmount = payments
         .filter(payment =>
-          payment.status === "paid" &&
-          payment.paidDate &&
-          new Date(payment.paidDate) >= monthStart &&
-          new Date(payment.paidDate) <= monthEnd
+          payment.status === "completed" &&
+          payment.payment_date &&
+          payment.payment_date >= monthStartStr &&
+          payment.payment_date <= monthEndStr
         )
         .reduce((sum, payment) => sum + (payment.amount || 0), 0);
 
       revenueByMonth.push({
         month: monthStart.toLocaleString('default', { month: 'short' }),
-        revenue: monthRevenue
+        revenue: monthRevenueAmount
       });
     }
 
     // Leases by status
     const leasesByStatus = [
-      { status: "active", count: leases.filter(l => l.status === "active").length },
-      { status: "expired", count: leases.filter(l => l.status === "expired").length },
-      { status: "pending", count: leases.filter(l => l.status === "pending").length },
-      { status: "terminated", count: leases.filter(l => l.status === "terminated").length }
+      { status: "active", count: leases.filter(l => l.lease_status === "active").length },
+      { status: "expired", count: leases.filter(l => l.lease_status === "expired").length },
+      { status: "pending", count: leases.filter(l => l.lease_status === "pending").length },
+      { status: "terminated", count: leases.filter(l => l.lease_status === "terminated").length }
     ];
 
     // Maintenance by priority

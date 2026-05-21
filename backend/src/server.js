@@ -1,19 +1,36 @@
 const app = require("./app");
 const env = require("./config/env");
-const { connectDB } = require("./config/db");
 const logger = require("./utils/logger");
 const { startScheduler } = require("./utils/scheduler");
+const { initSupabase } = require("./config/supabase");
 
 let server;
 
-connectDB().then(() => {
-  server = app.listen(env.PORT, () => {
-    logger.info(`Listening to port ${env.PORT}`);
-  });
+// Initialize Supabase and start server
+async function startServer() {
+  try {
+    // Initialize Supabase connection
+    const supabase = initSupabase();
+    logger.info("Supabase initialized successfully");
 
-  // Start automated tasks scheduler
-  startScheduler();
-});
+    // Start Express server
+    server = app.listen(env.PORT, () => {
+      logger.info(`Server listening on port ${env.PORT}`);
+      logger.info(`Environment: ${env.NODE_ENV}`);
+      logger.info(`Health check: http://localhost:${env.PORT}/health`);
+    });
+
+    // Start automated tasks scheduler
+    startScheduler();
+
+  } catch (error) {
+    logger.error("Failed to start server:", error);
+    process.exit(1);
+  }
+}
+
+// Start the server
+startServer();
 
 const exitHandler = () => {
   if (server) {
@@ -27,7 +44,7 @@ const exitHandler = () => {
 };
 
 const unexpectedErrorHandler = (error) => {
-  logger.error(error);
+  logger.error("Unexpected error:", error);
   exitHandler();
 };
 

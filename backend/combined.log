@@ -361,3 +361,7 @@
 {"level":"info","message":"Database ready for development use","service":"property-management-service","timestamp":"2026-05-05 17:06:53"}
 {"level":"info","message":"Scheduler started successfully","service":"property-management-service","timestamp":"2026-05-05 17:06:53"}
 {"level":"info","message":"Listening to port 5000","service":"property-management-service","timestamp":"2026-05-05 17:06:53"}
+{"level":"info","message":"Local JSON Database initialized at: C:\\Users\\suhan\\OneDrive\\Desktop\\project\\backend\\data\\database.json","service":"property-management-service","timestamp":"2026-05-20 20:29:07"}
+{"level":"info","message":"Database ready for development use","service":"property-management-service","timestamp":"2026-05-20 20:29:07"}
+{"level":"info","message":"Scheduler started successfully","service":"property-management-service","timestamp":"2026-05-20 20:29:07"}
+{"level":"info","message":"Listening to port 5000","service":"property-management-service","timestamp":"2026-05-20 20:29:07"}
