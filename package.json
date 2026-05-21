@@ -2,6 +2,7 @@
   "name": "commercial-property-lease-management",
   "version": "1.0.0",
   "scripts": {
+    "dev": "npm run dev --prefix frontend",
     "build": "cd frontend && npm install && npm run build"
   },
   "dependencies": {
