@@ -2,6 +2,8 @@ import { useState } from 'react';
 import axios from 'axios';
 import './Login.css';
 
+const API_HOST = import.meta.env.VITE_API_HOST || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : '');
+
 const Login = ({ onLogin }) => {
   const [formData, setFormData] = useState({
     email: '',
@@ -41,7 +43,7 @@ const Login = ({ onLogin }) => {
             password: formData.password
           };
 
-      const response = await axios.post(`http://localhost:5000${endpoint}`, submitData);
+      const response = await axios.post(`${API_HOST}${endpoint}`, submitData);
 
       if (response.data.success) {
         onLogin(response.data.data.user, response.data.data.token);

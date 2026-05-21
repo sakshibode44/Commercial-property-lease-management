@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import './Properties.css';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5000/api/v1' : '/api/v1');
+
 const Properties = () => {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,7 +24,7 @@ const Properties = () => {
   const fetchProperties = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/v1/properties', {
+      const response = await axios.get(`${API_BASE_URL}/properties`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setProperties(response.data.data);
@@ -44,7 +46,7 @@ const Properties = () => {
         amenities: formData.amenities.split(',').map(a => a.trim())
       };
 
-      await axios.post('http://localhost:5000/api/v1/properties', data, {
+      await axios.post(`${API_BASE_URL}/properties`, data, {
         headers: { Authorization: `Bearer ${token}` }
       });
 

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5000/api/v1' : '/api/v1');
+
 const Tenants = () => {
   const [tenants, setTenants] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,7 +25,7 @@ const Tenants = () => {
   const fetchTenants = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/v1/tenants', {
+      const response = await axios.get(`${API_BASE_URL}/tenants`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setTenants(response.data.data);
@@ -49,7 +51,7 @@ const Tenants = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post('http://localhost:5000/api/v1/tenants', formData, {
+      const response = await axios.post(`${API_BASE_URL}/tenants`, formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
